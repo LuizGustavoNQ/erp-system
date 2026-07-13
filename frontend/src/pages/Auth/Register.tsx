@@ -11,6 +11,8 @@ export function Register() {
   const [email, setEmail] = useState('');
   const [senha, setSenha] = useState('');
   const [cargo, setCargo] = useState('VENDEDOR');
+  const passwordErrorMessage = 'A senha deve conter no mínimo 8 caracteres, uma letra maiúscula, uma minúscula, um número e um caractere especial';
+  const passwordPattern = /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[@#$%^&+=!]).{8,}$/;
   
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState('');
@@ -29,12 +31,18 @@ export function Register() {
     setError('');
     setSuccess(false);
 
+    if (!passwordPattern.test(senha)) {
+      setError(passwordErrorMessage);
+      setIsLoading(false);
+      return;
+    }
+
     try {
       await api.post('/usuarios', { nome, email, senha, cargo });
       setSuccess(true);
       setTimeout(() => navigate('/login'), 2500);
     } catch (err: any) {
-      setError(err.response?.data?.message || 'Ocorreu um erro ao criar a conta. Verifique os dados e tente novamente.');
+      setError(err.response?.data?.senha || err.response?.data?.message || 'Ocorreu um erro ao criar a conta. Verifique os dados e tente novamente.');
     } finally {
       setIsLoading(false);
     }
@@ -102,6 +110,7 @@ export function Register() {
                   placeholder="••••••••"
                   value={senha}
                   onChange={(e) => setSenha(e.target.value)}
+                  error={error === passwordErrorMessage ? error : ''}
                 />
               </div>
 
@@ -121,12 +130,6 @@ export function Register() {
                   <option value="ADMIN">Administrador</option>
                 </select>
               </div>
-
-              {error && (
-                <div className="rounded-md bg-red-50 p-4">
-                  <p className="text-sm font-medium text-red-800">{error}</p>
-                </div>
-              )}
               
               {success && (
                 <div className="rounded-md bg-green-50 p-4">

@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
 import { useMutation } from '@tanstack/react-query';
+import { AxiosError } from 'axios';
 import { api } from '../../lib/api';
 import { Button } from '../../components/ui/Button';
 import { Input } from '../../components/ui/Input';
@@ -9,6 +10,8 @@ import { ArrowLeft } from 'lucide-react';
 
 export function UsuarioForm() {
   const navigate = useNavigate();
+  
+  const passwordPattern = /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[@#$%^&+=!]).{8,}$/;
 
   const [formData, setFormData] = useState({
     nome: '',
@@ -16,6 +19,8 @@ export function UsuarioForm() {
     senha: '',
     cargo: 'VENDEDOR',
   });
+
+  const [senhaErro, setSenhaErro] = useState('');
 
   const mutation = useMutation({
     mutationFn: async (data: typeof formData) => {
@@ -25,16 +30,37 @@ export function UsuarioForm() {
     onSuccess: () => {
       navigate('/usuarios');
     },
+    onError: (error: AxiosError<Record<string, string> | { message?: string }>) => {
+      const data = error.response?.data;
+      const backendMessage = data && typeof data === 'object'
+        ? ('senha' in data ? data.senha : data.message)
+        : undefined;
+
+      if (backendMessage) {
+        setSenhaErro(backendMessage);
+      }
+    },
   });
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
+
+    const { senha } = formData;
+    if (!passwordPattern.test(senha)) {
+      setSenhaErro(passwordErrorMessage);
+      return;
+    }
+    setSenhaErro('');
+
     mutation.mutate(formData);
   };
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
     const { name, value } = e.target;
     setFormData(prev => ({ ...prev, [name]: value }));
+    if (name === 'senha') {
+      setSenhaErro('');
+    }
   };
 
   return (
@@ -83,6 +109,7 @@ export function UsuarioForm() {
                   value={formData.senha}
                   onChange={handleChange}
                   placeholder="••••••••"
+                  error={senhaErro}
                 />
               </div>
               <div className="space-y-2">
@@ -102,10 +129,6 @@ export function UsuarioForm() {
                 </div>
               </div>
             </div>
-
-            {mutation.isError && (
-              <p className="text-sm text-red-500">Ocorreu um erro ao criar o usuário.</p>
-            )}
 
             <div className="flex justify-end gap-3">
               <Button type="button" variant="outline" asChild>
