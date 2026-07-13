@@ -39,9 +39,6 @@ build/
 # Maven
 target/
 
-# Configurações locais
-src/main/resources/application.properties
-
 # Logs
 *.log
 
