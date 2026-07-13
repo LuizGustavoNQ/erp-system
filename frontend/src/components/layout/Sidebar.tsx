@@ -1,6 +1,6 @@
 import { Link, useLocation } from 'react-router-dom';
 import { cn } from '../../lib/utils';
-import { LayoutDashboard, Users, ShoppingBag, Contact, LogOut } from 'lucide-react';
+import { LayoutDashboard, Users, ShoppingBag, Contact, LogOut, ShoppingCart } from 'lucide-react';
 import { useAuthStore } from '../../store/authStore';
 
 const navigation = [
@@ -8,6 +8,7 @@ const navigation = [
   { name: 'Clientes', href: '/clientes', icon: Contact },
   { name: 'Produtos', href: '/produtos', icon: ShoppingBag },
   { name: 'Usuários', href: '/usuarios', icon: Users },
+  { name: 'Vendas', href: '/vendas', icon: ShoppingCart },
 ];
 
 export function Sidebar() {

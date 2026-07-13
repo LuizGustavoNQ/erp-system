@@ -6,13 +6,16 @@ import { api } from '../../lib/api';
 import { Button } from '../../components/ui/Button';
 import { Input } from '../../components/ui/Input';
 
-export function Login() {
+export function Register() {
+  const [nome, setNome] = useState('');
   const [email, setEmail] = useState('');
   const [senha, setSenha] = useState('');
+  const [cargo, setCargo] = useState('VENDEDOR');
+  
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState('');
+  const [success, setSuccess] = useState(false);
   
-  const login = useAuthStore((state) => state.login);
   const isAuthenticated = useAuthStore((state) => state.isAuthenticated());
   const navigate = useNavigate();
 
@@ -24,19 +27,20 @@ export function Login() {
     e.preventDefault();
     setIsLoading(true);
     setError('');
+    setSuccess(false);
 
     try {
-      const { data } = await api.post('/auth/login', { email, senha });
-      if (data.token) {
-        login(data.token, email);
-        navigate('/');
-      }
-    } catch (err) {
-      setError('Credenciais inválidas. Tente novamente.');
+      await api.post('/usuarios', { nome, email, senha, cargo });
+      setSuccess(true);
+      setTimeout(() => navigate('/login'), 2500);
+    } catch (err: any) {
+      setError(err.response?.data?.message || 'Ocorreu um erro ao criar a conta. Verifique os dados e tente novamente.');
     } finally {
       setIsLoading(false);
     }
   };
+
+  const formatSelectClass = "flex h-10 w-full rounded-md border border-input bg-transparent px-3 py-2 text-sm ring-offset-background focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50";
 
   return (
     <div className="flex min-h-screen bg-gray-50">
@@ -53,15 +57,28 @@ export function Login() {
 
           <div className="mt-8">
             <h1 className="text-2xl font-semibold tracking-tight text-gray-900">
-              Acesse sua conta
+              Crie sua conta
             </h1>
             <p className="mt-2 text-sm text-gray-500">
-              Gerencie seus negócios de forma inteligente e integrada.
+              Preencha os dados abaixo para se cadastrar no sistema.
             </p>
           </div>
 
           <div className="mt-10">
-            <form onSubmit={handleSubmit} className="space-y-6">
+            <form onSubmit={handleSubmit} className="space-y-5">
+              <div>
+                <label className="mb-2 block text-sm font-medium leading-6 text-gray-900">
+                  Nome completo
+                </label>
+                <Input
+                  type="text"
+                  required
+                  placeholder="Seu nome"
+                  value={nome}
+                  onChange={(e) => setNome(e.target.value)}
+                />
+              </div>
+
               <div>
                 <label className="mb-2 block text-sm font-medium leading-6 text-gray-900">
                   E-mail corporativo
@@ -88,21 +105,44 @@ export function Login() {
                 />
               </div>
 
+              <div>
+                <label className="mb-2 block text-sm font-medium leading-6 text-gray-900">
+                  Cargo
+                </label>
+                <select 
+                  className={formatSelectClass}
+                  value={cargo}
+                  onChange={(e) => setCargo(e.target.value)}
+                  required
+                >
+                  <option value="VENDEDOR">Vendedor</option>
+                  <option value="ESTOQUISTA">Estoquista</option>
+                  <option value="GERENTE">Gerente</option>
+                  <option value="ADMIN">Administrador</option>
+                </select>
+              </div>
+
               {error && (
                 <div className="rounded-md bg-red-50 p-4">
                   <p className="text-sm font-medium text-red-800">{error}</p>
                 </div>
               )}
+              
+              {success && (
+                <div className="rounded-md bg-green-50 p-4">
+                  <p className="text-sm font-medium text-green-800">Conta criada com sucesso! Redirecionando para o login...</p>
+                </div>
+              )}
 
-              <Button type="submit" className="w-full" isLoading={isLoading} size="lg">
-                Entrar no sistema
+              <Button type="submit" className="w-full" isLoading={isLoading} size="lg" disabled={success}>
+                Cadastrar
               </Button>
             </form>
             
             <p className="mt-8 text-center text-sm text-gray-500">
-              Ainda não tem conta?{' '}
-              <Link to="/register" className="font-semibold leading-6 text-primary-600 hover:text-primary-500">
-                Crie uma agora
+              Já possui uma conta?{' '}
+              <Link to="/login" className="font-semibold leading-6 text-primary-600 hover:text-primary-500">
+                Fazer login
               </Link>
             </p>
           </div>
@@ -112,11 +152,11 @@ export function Login() {
         <div className="absolute inset-0 h-full w-full bg-slate-900">
           <div className="flex h-full flex-col justify-center px-20">
             <h2 className="text-4xl font-bold tracking-tight text-white sm:text-5xl">
-              Tudo em um só lugar
+              Bem-vindo ao time
             </h2>
             <p className="mt-6 max-w-lg text-lg leading-8 text-slate-300">
-              Nossa plataforma de gestão ERP foi desenvolvida para oferecer uma experiência 
-              limpa, rápida e segura para o seu negócio.
+              Junte-se à nossa plataforma de gestão ERP e comece a otimizar 
+              as operações da sua empresa agora mesmo.
             </p>
           </div>
         </div>
